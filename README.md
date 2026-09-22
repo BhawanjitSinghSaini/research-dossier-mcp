@@ -1,14 +1,31 @@
 # Research Dossier Synthesizer MCP
 
-Autonomous research synthesis tool for consultants. Decompose research briefs, conduct parallel investigations, synthesize findings into polished dossiers.
+An MCP server for consultants: decompose research briefs into parallel search queries, synthesize raw findings into a structured dossier with citations, and export it for delivery.
 
-## Setup (Week 1)
+## Setup
 
 ```bash
 npm install
 npm run build
 npm run dev
 ```
+
+The server needs at least one LLM provider configured via environment variables (see below) — it will fail to start without one.
+
+## Configuration
+
+Set these as environment variables (e.g. in a local `.env` file, or in the `env` block of your MCP client config):
+
+| Variable | Required | Description |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | one of these | Anthropic API key. Takes priority over Gemini if both are set. |
+| `GEMINI_API_KEY` | one of these | Google Gemini API key. |
+| `LLM_PROVIDER` | no | `anthropic` or `gemini` — forces a provider instead of auto-detecting from which key is present. |
+| `ANTHROPIC_MODEL` | no | Defaults to `claude-sonnet-5`. |
+| `GEMINI_MODEL` | no | Defaults to `gemini-flash-latest`. |
+| `ANTHROPIC_WORKSPACE_ID` | no | Required only if your Anthropic API key is workspace-scoped (sends the `anthropic-workspace-id` header). |
+
+Gemini's free tier has a low daily request quota per model — if you hit `429 RESOURCE_EXHAUSTED`, the server retries with backoff automatically, but a model-wide daily cap needs either waiting for it to reset, switching `GEMINI_MODEL` to one with separate quota, or enabling billing on the Google Cloud project.
 
 ## Tools
 
@@ -29,20 +46,23 @@ npm run dev
 
 ## Integration with Claude Desktop
 
-Add to ~/.config/Claude/claude.json (macOS/Linux) or %APPDATA%\Claude\claude.json (Windows):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
   "mcpServers": {
     "research-dossier": {
       "command": "node",
-      "args": ["/path/to/research-dossier-mcp/dist/index.js"]
+      "args": ["/path/to/research-dossier-mcp/dist/index.js"],
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-..."
+      }
     }
   }
 }
 ```
 
-Restart Claude Desktop. MCP tools now available.
+Run `npm run build` first so `dist/index.js` exists. Fully quit and reopen Claude Desktop (not just close the window) to pick up config changes.
 
 ## Typical Workflow
 
@@ -62,29 +82,8 @@ Restart Claude Desktop. MCP tools now available.
    - Implications for consulting clients
 5. **export_dossier**: Output as markdown → PDF slides, or send to client
 
-## This Week's Tasks
-
-- [ ] Build & test locally (npm run dev)
-- [ ] Tune synthesis prompt (see synthesizeResearch function)
-- [ ] Manual test: "Research DevOps tooling consolidation"
-- [ ] Refine output format (add section numbering, headers, etc.)
-- [ ] Connect to Claude Desktop MCP config
-
-## Next Week (Week 2)
-
-- Add web_search integration (tools/list → include web_search)
-- Build export pipeline (markdown -> PDF via API)
-- Test with 3-5 consultant contacts
-- Collect feedback on dossier quality/format
-
-## Pricing Anchor
-
-- MVP: Free beta (network)
-- Phase 2: $49/mo (10/mo) or $149/mo (unlimited)
-- White-label: Custom pricing by consulting firm size
-
 ## Notes
 
-- Synthesis quality depends on prompt tuning. Expect 2-3 iterations.
-- Citations critical for consultant trust. Test that [Source: URL] appears in output.
-- Depth level should scale research time estimate (mention in Claude prompt).
+- Synthesis quality depends on prompt tuning — see `synthesizeResearch` in `src/index.ts`.
+- Citations are requested inline as `[Source: URL]`; verify they appear when tuning the prompt further.
+- `export_dossier` is pure formatting (no LLM call), so it needs no provider key by itself — but the server as a whole still requires one configured to start.
