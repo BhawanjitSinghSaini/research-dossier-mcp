@@ -1,6 +1,6 @@
 {
   "name": "research-dossier-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Research Dossier Synthesizer - Deep research synthesis for consultants",
   "type": "module",
   "main": "dist/index.js",
@@ -10,12 +10,15 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.0",
-    "@modelcontextprotocol/sdk": "^0.7.0"
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@modelcontextprotocol/sdk": "^0.7.0",
+    "marked": "^18.0.14",
+    "pdfkit": "^0.20.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "tsx": "^4.0.0"
+    "@types/pdfkit": "^0.17.6",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }
